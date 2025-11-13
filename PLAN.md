@@ -21,8 +21,8 @@ Key gameplay challenge: Allow players to collect and craft tokens from nearby lo
 - [x] [cite_start]Add a marker to the map representing the player at the classroom location.
 - [x] Figure out how to draw one single `leaflet.rectangle` on the map to represent one grid cell.
 - [x] Use loops to draw a grid of cells around the player.
-- [ ] Use the `luck` function to decide _if_ a cell should have a token and what its _initial value_ is (e.g., 2 or 4).
-- [ ] Display the token's value as text inside its cell rectangle.
+- [x] Use the `luck` function to decide _if_ a cell should have a token and what its _initial value_ is (e.g., 2 or 4).
+- [x] Display the token's value as text inside its cell rectangle.
 - [ ] Create an "inventory" display (a simple `div`) that shows what token the player is holding (or "empty").
 - [ ] Add a click handler to the grid cells.
 - [ ] Implement click logic:

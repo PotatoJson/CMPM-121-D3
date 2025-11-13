@@ -7,6 +7,7 @@ import "./style.css"; // student-controlled page style
 
 // Fix missing marker images
 import "./_leafletWorkaround.ts"; // fixes for missing Leaflet images
+import luck from "./_luck.ts";
 
 // --- Map Setup ---
 
@@ -20,6 +21,7 @@ const CLASSROOM_LATLNG = leaflet.latLng(
 const GAMEPLAY_ZOOM_LEVEL = 19;
 const TILE_DEGREES = 1e-4;
 const NEIGHBORHOOD_SIZE = 8;
+const TOKEN_SPAWN_PROBABILITY = 0.2;
 
 // Create the map div
 const mapDiv = document.createElement("div");
@@ -65,9 +67,32 @@ for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
       ],
     ]);
 
-    // Create the rectangle and add it to the map
-    const rect = leaflet.rectangle(bounds);
+    // Draw the cell rectangle
+    const rect = leaflet.rectangle(bounds, {
+      color: "#888", // Make the grid lines a bit lighter
+      weight: 1,
+      fillOpacity: 0.05,
+    });
     rect.addTo(map);
+
+    // --- Spawn token logic ---
+    // Use luck to decide if a token spawns here
+    if (luck([i, j].toString()) < TOKEN_SPAWN_PROBABILITY) {
+      // Use luck again (with a different seed) to determine the value
+      // We'll make 2s more common than 4s (80% chance for 2)
+      const value = luck([i, j, "initialValue"].toString()) < 0.8 ? 2 : 4;
+
+      // Create a text label for the token
+      const labelIcon = leaflet.divIcon({
+        className: "token-label", // We will style this in style.css
+        html: `<b>${value}</b>`, // The text to display
+      });
+
+      const label = leaflet.marker(bounds.getCenter(), {
+        icon: labelIcon,
+      });
+      label.addTo(map);
+    }
   }
 }
 

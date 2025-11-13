@@ -10,3 +10,28 @@
   width: 100%;
   height: 80vh;
 }
+
+/* Style for the token value labels */
+.token-label {
+  background: none; /* Remove default white box */
+  border: none; /* Remove default border */
+  box-shadow: none; /* Remove default shadow */
+  font-size: 1.2rem;
+  font-family: sans-serif;
+  color: #333;
+
+  /* Center the label text on its coordinates */
+  /* This is a bit of a CSS trick */
+  width: 40px !important;
+  height: 40px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -20px !important;
+  margin-top: -20px !important;
+
+  /* Make text unselectable */
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
