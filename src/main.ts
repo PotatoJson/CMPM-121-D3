@@ -84,7 +84,7 @@ function setCellState(
 
     // --- VICTORY CHECK ---
     // (From your plan: check for crafting 8 or 16)
-    if (newValue >= 16) {
+    if (newValue >= 8) {
       console.log(`VICTORY! You crafted a ${newValue} token!`);
       statusPanelDiv.innerHTML = `VICTORY! You crafted a ${newValue} token!`;
     }

@@ -35,5 +35,5 @@ Key gameplay challenge: Allow players to collect and craft tokens from nearby lo
     - AND the clicked cell is _empty_:
       - Place the inventory token into the cell.
       - Clear the player's inventory.
-- [ ] Add logic to check if a craft action or pickup created a token of value 16 (or 8) and log a "victory" message.
-- [ ] Add a "proximity check" so that clicks only work on cells near the player.
+- [x] Add logic to check if a craft action or pickup created a token of value 16 (or 8) and log a "victory" message.
+- [x] Add a "proximity check" so that clicks only work on cells near the player.
