@@ -149,9 +149,13 @@ function handleCellClick(
       playerState.i = i;
       playerState.j = j;
 
-      // This function will re-center and redraw the grid.
-      // It doesn't exist yet, so we'll add it next.
-      drawGrid();
+      // --- Instead of redrawing the grid, just move the player marker ---
+      const newLat = CLASSROOM_LATLNG.lat + (i + 0.5) * TILE_DEGREES;
+      const newLng = CLASSROOM_LATLNG.lng + (j + 0.5) * TILE_DEGREES;
+      playerMarker.setLatLng([newLat, newLng]);
+
+      // --- (Optional) Center camera on player after move ---
+      map.setView([newLat, newLng]);
     }
 
     // Case 2: Inventory is FULL
@@ -178,19 +182,28 @@ function handleCellClick(
 function drawGrid() {
   // Clear all old layers (rects, labels, markers)
   gridLayerGroup.clearLayers();
-  // Clear the old game state
-  // gridState.clear();
+
+  // --- This makes the grid "memoryless" ---
+  // It forgets all state every time the map moves.
+  gridState.clear();
+  // ----------------------------------------
 
   const origin = CLASSROOM_LATLNG;
 
+  // --- Get grid origin from camera center ---
+  const centerLatLng = map.getCenter();
+  const center_i = Math.floor((centerLatLng.lat - origin.lat) / TILE_DEGREES);
+  const center_j = Math.floor((centerLatLng.lng - origin.lng) / TILE_DEGREES);
+  // ----------------------------------------
+
   for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
     for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
-      // --- NOTE: We calculate the *actual* grid coordinates, not relative ---
-      const cell_i = playerState.i + i;
-      const cell_j = playerState.j + j;
+      // --- Calculate *actual* grid coordinates ---
+      const cell_i = center_i + i;
+      const cell_j = center_j + j;
       const cellKey = `${cell_i},${cell_j}`; // Unique key for our Map
 
-      // Calculate the bounds for cell [i, j]
+      // Calculate the bounds for cell [cell_i, cell_j]
       const bounds = leaflet.latLngBounds([
         // Southwest corner
         [
@@ -206,34 +219,23 @@ function drawGrid() {
 
       // Draw the cell rectangle
       const rect = leaflet.rectangle(bounds, {
-        color: "#888", // Make the grid lines a bit lighter
+        color: "#888",
         weight: 1,
         fillOpacity: 0.05,
       });
-      rect.addTo(gridLayerGroup); // <-- ADD TO GROUP, NOT MAP
+      rect.addTo(gridLayerGroup);
 
-      // --- Center player marker ---
-      if (i === 0 && j === 0) { // Note: this is (0,0) *relative* to player
-        const playerCenter = bounds.getCenter();
-        const playerMarker = leaflet.marker(bounds.getCenter());
-        playerMarker.bindTooltip("That's you!");
-        playerMarker.addTo(gridLayerGroup);
-
-        map.setView(playerCenter, GAMEPLAY_ZOOM_LEVEL);
-      }
+      // --- Player marker is now separate, so that 'if' block is gone ---
 
       // 1. CHECK FOR (OR CREATE) STATE
-      // We must get the state *before* drawing, so we know what to draw.
-      // Check if we've seen this cell before
+      // Because we call gridState.clear(), this logic runs EVERY time.
       if (!gridState.has(cellKey)) {
-        // If NOT, run spawn logic ONCE to "discover" it
         let value: number | null = null;
         if (luck([cell_i, cell_j].toString()) < TOKEN_SPAWN_PROBABILITY) {
           value = luck([cell_i, cell_j, "initialValue"].toString()) < 0.8
             ? 2
             : 4;
         }
-        // Save this "discovered" state. Label is null for now.
         gridState.set(cellKey, { value, label: null });
       }
 
@@ -242,8 +244,6 @@ function drawGrid() {
       const value = cellState.value;
 
       // 3. DRAW THE LABEL (if value exists)
-      // We must re-create the label every time grid is drawn,
-      // because gridLayerGroup.clearLayers() destroyed the old one.
       if (value !== null) {
         const labelIcon = leaflet.divIcon({
           className: "token-label",
@@ -256,23 +256,21 @@ function drawGrid() {
         label.addTo(gridLayerGroup);
 
         label.on("click", () => {
-          // Pass the *actual* coords to the handler
           handleCellClick(cell_i, cell_j, cellKey, bounds);
         });
 
-        // 4. UPDATE THE STATE WITH THE *NEW* LABEL
-        cellState.label = label; // Save the new label reference
+        cellState.label = label;
       }
 
       // 5. ADD CLICK HANDLER TO THE RECTANGLE
       rect.on("click", () => {
-        // Pass the *actual* coords to the handler
         handleCellClick(cell_i, cell_j, cellKey, bounds);
       });
     } // End of inner loop (j)
   } // End of outer loop (i)
 
-  console.log(`Grid drawn at [${playerState.i}, ${playerState.j}]`);
+  // We no longer log player state, as the grid is camera-centric
+  // console.log(`Grid drawn at [${playerState.i}, ${playerState.j}]`);
 }
 
 // Create the map div
@@ -290,6 +288,15 @@ const map = leaflet.map(mapDiv, {
   scrollWheelZoom: false,
 });
 
+const playerMarker = leaflet.marker(
+  [
+    CLASSROOM_LATLNG.lat + 0.5 * TILE_DEGREES,
+    CLASSROOM_LATLNG.lng + 0.5 * TILE_DEGREES,
+  ],
+);
+playerMarker.bindTooltip("That's you!");
+playerMarker.addTo(map);
+
 // Populate the map with a background tile layer
 leaflet
   .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -299,6 +306,11 @@ leaflet
   })
   .addTo(map);
 
-// --- Initial Setup ---
+// --- Setup Grid Layer and Events ---
 gridLayerGroup.addTo(map); // Add the group to the map ONCE
+
+// --- This ties the grid drawing to the camera ---
+map.on("moveend", drawGrid);
+// ----------------------------------------
+
 drawGrid(); // Draw the grid for the first time
