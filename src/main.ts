@@ -49,6 +49,7 @@ const playerState = {
 };
 
 const gridState = new Map<string, CellState>(); // Key: "i,j"
+const gridLayerGroup = leaflet.layerGroup();
 
 function updateInventoryUI(value: number | null) {
   playerInventory = value;
@@ -88,7 +89,7 @@ function setCellState(
     newLabel = leaflet.marker(bounds.getCenter(), {
       icon: labelIcon,
     });
-    newLabel.addTo(map);
+    newLabel.addTo(gridLayerGroup);
 
     newLabel.on("click", () => {
       handleCellClick(i, j, cellKey, bounds);
@@ -135,14 +136,23 @@ function handleCellClick(
   // --- Core Game Logic ---
 
   // Case 1: Inventory is EMPTY
+  // Case 1: Inventory is EMPTY
   if (playerInventory === null) {
     // 1a: Cell has a token. Pick it up.
     if (cell.value !== null) {
       statusPanelDiv.innerHTML = `Picked up ${cell.value}.`;
       updateInventoryUI(cell.value);
       setCellState(i, j, cellKey, null, bounds);
+    } // 1b: Cell is EMPTY. This is a MOVEMENT click.
+    else {
+      statusPanelDiv.innerHTML = `Moved to [${i}, ${j}].`;
+      playerState.i = i;
+      playerState.j = j;
+
+      // This function will re-center and redraw the grid.
+      // It doesn't exist yet, so we'll add it next.
+      drawGrid();
     }
-    // 1b: Cell is empty. Do nothing.
 
     // Case 2: Inventory is FULL
   } else {
@@ -163,6 +173,103 @@ function handleCellClick(
       statusPanelDiv.innerHTML = "Can't combine different tokens!";
     }
   }
+}
+
+function drawGrid() {
+  // Clear all old layers (rects, labels, markers)
+  gridLayerGroup.clearLayers();
+  // Clear the old game state
+  // gridState.clear();
+
+  const origin = CLASSROOM_LATLNG;
+
+  for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
+    for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
+      // --- NOTE: We calculate the *actual* grid coordinates, not relative ---
+      const cell_i = playerState.i + i;
+      const cell_j = playerState.j + j;
+      const cellKey = `${cell_i},${cell_j}`; // Unique key for our Map
+
+      // Calculate the bounds for cell [i, j]
+      const bounds = leaflet.latLngBounds([
+        // Southwest corner
+        [
+          origin.lat + cell_i * TILE_DEGREES,
+          origin.lng + cell_j * TILE_DEGREES,
+        ],
+        // Northeast corner
+        [
+          origin.lat + (cell_i + 1) * TILE_DEGREES,
+          origin.lng + (cell_j + 1) * TILE_DEGREES,
+        ],
+      ]);
+
+      // Draw the cell rectangle
+      const rect = leaflet.rectangle(bounds, {
+        color: "#888", // Make the grid lines a bit lighter
+        weight: 1,
+        fillOpacity: 0.05,
+      });
+      rect.addTo(gridLayerGroup); // <-- ADD TO GROUP, NOT MAP
+
+      // --- Center player marker ---
+      if (i === 0 && j === 0) { // Note: this is (0,0) *relative* to player
+        const playerMarker = leaflet.marker(bounds.getCenter());
+        playerMarker.bindTooltip("That's you!");
+        playerMarker.addTo(gridLayerGroup); // <-- ADD TO GROUP, NOT MAP
+      }
+
+      // 1. CHECK FOR (OR CREATE) STATE
+      // We must get the state *before* drawing, so we know what to draw.
+      // Check if we've seen this cell before
+      if (!gridState.has(cellKey)) {
+        // If NOT, run spawn logic ONCE to "discover" it
+        let value: number | null = null;
+        if (luck([cell_i, cell_j].toString()) < TOKEN_SPAWN_PROBABILITY) {
+          value = luck([cell_i, cell_j, "initialValue"].toString()) < 0.8
+            ? 2
+            : 4;
+        }
+        // Save this "discovered" state. Label is null for now.
+        gridState.set(cellKey, { value, label: null });
+      }
+
+      // 2. GET THE GUARANTEED STATE
+      const cellState = gridState.get(cellKey)!;
+      const value = cellState.value;
+
+      // 3. DRAW THE LABEL (if value exists)
+      // We must re-create the label every time grid is drawn,
+      // because gridLayerGroup.clearLayers() destroyed the old one.
+      if (value !== null) {
+        const labelIcon = leaflet.divIcon({
+          className: "token-label",
+          html: `<b>${value}</b>`,
+        });
+
+        const label = leaflet.marker(bounds.getCenter(), {
+          icon: labelIcon,
+        });
+        label.addTo(gridLayerGroup);
+
+        label.on("click", () => {
+          // Pass the *actual* coords to the handler
+          handleCellClick(cell_i, cell_j, cellKey, bounds);
+        });
+
+        // 4. UPDATE THE STATE WITH THE *NEW* LABEL
+        cellState.label = label; // Save the new label reference
+      }
+
+      // 5. ADD CLICK HANDLER TO THE RECTANGLE
+      rect.on("click", () => {
+        // Pass the *actual* coords to the handler
+        handleCellClick(cell_i, cell_j, cellKey, bounds);
+      });
+    } // End of inner loop (j)
+  } // End of outer loop (i)
+
+  console.log(`Grid drawn at [${playerState.i}, ${playerState.j}]`);
 }
 
 // Create the map div
@@ -189,73 +296,6 @@ leaflet
   })
   .addTo(map);
 
-// --- Draw the grid ---
-const origin = CLASSROOM_LATLNG;
-
-for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
-  for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
-    const cellKey = `${i},${j}`; // Unique key for our Map
-
-    // Calculate the bounds for cell [i, j]
-    const bounds = leaflet.latLngBounds([
-      // Southwest corner
-      [origin.lat + i * TILE_DEGREES, origin.lng + j * TILE_DEGREES],
-      // Northeast corner
-      [
-        origin.lat + (i + 1) * TILE_DEGREES,
-        origin.lng + (j + 1) * TILE_DEGREES,
-      ],
-    ]);
-
-    // Draw the cell rectangle
-    const rect = leaflet.rectangle(bounds, {
-      color: "#888", // Make the grid lines a bit lighter
-      weight: 1,
-      fillOpacity: 0.05,
-    });
-    rect.addTo(map);
-
-    // --- Center player marker in [0, 0] cell ---
-    if (i === playerState.i && j === playerState.j) {
-      const playerMarker = leaflet.marker(bounds.getCenter());
-      playerMarker.bindTooltip("That's you!");
-      playerMarker.addTo(map);
-    }
-
-    // --- Initialize Cell State ---
-    let value: number | null = null;
-    let label: leaflet.Marker | null = null;
-
-    // --- Spawn token logic ---
-    if (luck([i, j].toString()) < TOKEN_SPAWN_PROBABILITY) {
-      // Use luck again (with a different seed) to determine the value
-      value = luck([i, j, "initialValue"].toString()) < 0.8 ? 2 : 4;
-
-      // Create a text label for the token
-      const labelIcon = leaflet.divIcon({
-        className: "token-label", // We will style this in style.css
-        html: `<b>${value}</b>`, // The text to display
-      });
-
-      label = leaflet.marker(bounds.getCenter(), {
-        icon: labelIcon,
-      });
-      label.addTo(map);
-
-      label.on("click", () => {
-        handleCellClick(i, j, cellKey, bounds);
-      });
-    }
-
-    // --- (CRITICAL FIX) Store state and add click handler ---
-    // These two lines MUST come *after* the spawn logic
-    gridState.set(cellKey, { value, label });
-
-    rect.on("click", () => {
-      handleCellClick(i, j, cellKey, bounds);
-    });
-    // --- End of critical fix ---
-  } // End of inner loop (j)
-} // End of outer loop (i)
-
-console.log("Map initialized!");
+// --- Initial Setup ---
+gridLayerGroup.addTo(map); // Add the group to the map ONCE
+drawGrid(); // Draw the grid for the first time

@@ -46,13 +46,13 @@ Key gameplay challenge: Allow the player to explore and find new tokens.
 #### Steps b
 
 - [x] Create a "player state" object to hold the player's `i` and `j` grid coordinates (starting at `0, 0`).
-- [ ] Add `click` handlers to the four main grid rectangles adjacent to the player (N, S, E, W).
-- [ ] When an adjacent cell is clicked:
+- [x] Add `click` handlers to the four main grid rectangles adjacent to the player (N, S, E, W).
+- [x] When an adjacent cell is clicked:
   - IF the cell is empty (no token):
     - Update the player's `i, j` coordinates to match the clicked cell.
     - "Re-center" the grid by:
       - Deleting all existing grid cells and tokens.
       - Re-running the grid-drawing loops, but using the _new_ player `i, j` as the origin.
       - (This will make new, unexplored cells appear at the edges).
-- [ ] Update the `handleCellClick` proximity check to use the new player `i, j` state instead of just `[0, 0]`.
+- [x] Update the `handleCellClick` proximity check to use the new player `i, j` state instead of just `[0, 0]`.
 - [ ] Update the map's "view" (camera) to follow the player marker.
