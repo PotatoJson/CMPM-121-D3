@@ -56,3 +56,21 @@ Key gameplay challenge: Allow the player to explore and find new tokens.
       - (This will make new, unexplored cells appear at the edges).
 - [x] Update the `handleCellClick` proximity check to use the new player `i, j` state instead of just `[0, 0]`.
 - [x] Update the map's "view" (camera) to follow the player marker.
+
+### D3.c: Persistent State & Global Coordinates
+
+Key technical challenge: Refactor the grid-spawning logic to use a persistent `gridState` (fixing the "memoryless"-by-design behavior from D3.b) and anchor the world grid to Null Island (0,0).
+
+Key gameplay challenge: Ensure the player starts at the classroom location, even though the grid is anchored at (0,0), and that cells now correctly remember their state (e.g., if a token has been picked up, it stays picked up).
+
+#### Steps c
+
+- [ ] In `src/main.ts`, change the `CLASSROOM_LATLNG` constant to `GRID_ORIGIN` and set it to `leaflet.latLng(0, 0)`.
+- [ ] Create a _new_ constant, `const CLASSROOM_LATLNG = leaflet.latLng(36.997936938057016, -122.05703507501151);`, to use as a starting position.
+- [ ] Update all grid calculation logic (in `drawGrid` and `handleCellClick`) to use `GRID_ORIGIN` as the anchor instead of the classroom constant.
+- [ ] Update the initial `playerState` object to hold the grid coordinates of the classroom _relative to Null Island_.
+  - `i: Math.floor(CLASSROOM_LATLNG.lat / TILE_DEGREES)`
+  - `j: Math.floor(CLASSROOM_LATLNG.lng / TILE_DEGREES)`
+- [ ] Update the initial `map` center in `leaflet.map()` to use `CLASSROOM_LATLNG`, so the camera starts on the player.
+- [ ] Update the `playerMarker` creation to use the _classroom's coordinates_, not the grid origin's.
+- [ ] In `drawGrid()`, remove the `gridState.clear()` line. This will re-enable persistent memory, and the `!gridState.has(cellKey)` check will now correctly "discover" and save cell states permanently.
