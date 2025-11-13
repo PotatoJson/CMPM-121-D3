@@ -23,9 +23,9 @@ Key gameplay challenge: Allow players to collect and craft tokens from nearby lo
 - [x] Use loops to draw a grid of cells around the player.
 - [x] Use the `luck` function to decide _if_ a cell should have a token and what its _initial value_ is (e.g., 2 or 4).
 - [x] Display the token's value as text inside its cell rectangle.
-- [ ] Create an "inventory" display (a simple `div`) that shows what token the player is holding (or "empty").
-- [ ] Add a click handler to the grid cells.
-- [ ] Implement click logic:
+- [x] Create an "inventory" display (a simple `div`) that shows what token the player is holding (or "empty").
+- [x] Add a click handler to the grid cells.
+- [x] Implement click logic:
   - IF player inventory is "empty":
     - Pick up the token from the clicked cell (cell becomes empty, inventory now holds the token).
   - IF player inventory is _not_ "empty":
