@@ -43,4 +43,8 @@ leaflet
   })
   .addTo(map);
 
+const playerMarker = leaflet.marker(CLASSROOM_LATLNG);
+playerMarker.bindTooltip("That's you!");
+playerMarker.addTo(map);
+
 console.log("Map initialized!");
