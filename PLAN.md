@@ -13,7 +13,7 @@ A map-based game where players move around, collect tokens from grid cells, and 
 Key technical challenge: Assemble a map-based user interface using Leaflet.
 Key gameplay challenge: Allow players to collect and craft tokens from nearby locations.
 
-#### Steps
+#### Steps a
 
 - [x] Copy `src/main.ts` to `src/reference.ts` for future reference.
 - [x] [cite_start]Delete everything in `src/main.ts`
@@ -37,3 +37,22 @@ Key gameplay challenge: Allow players to collect and craft tokens from nearby lo
       - Clear the player's inventory.
 - [x] Add logic to check if a craft action or pickup created a token of value 16 (or 8) and log a "victory" message.
 - [x] Add a "proximity check" so that clicks only work on cells near the player.
+
+### D3.b: Player Movement
+
+Key technical challenge: Make the map and grid respond to player movement.
+Key gameplay challenge: Allow the player to explore and find new tokens.
+
+#### Steps b
+
+- [x] Create a "player state" object to hold the player's `i` and `j` grid coordinates (starting at `0, 0`).
+- [ ] Add `click` handlers to the four main grid rectangles adjacent to the player (N, S, E, W).
+- [ ] When an adjacent cell is clicked:
+  - IF the cell is empty (no token):
+    - Update the player's `i, j` coordinates to match the clicked cell.
+    - "Re-center" the grid by:
+      - Deleting all existing grid cells and tokens.
+      - Re-running the grid-drawing loops, but using the _new_ player `i, j` as the origin.
+      - (This will make new, unexplored cells appear at the edges).
+- [ ] Update the `handleCellClick` proximity check to use the new player `i, j` state instead of just `[0, 0]`.
+- [ ] Update the map's "view" (camera) to follow the player marker.

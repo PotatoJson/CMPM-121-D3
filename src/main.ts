@@ -42,6 +42,12 @@ const TOKEN_SPAWN_PROBABILITY = 0.2;
 
 // --- Game State ---
 let playerInventory: number | null = null;
+
+const playerState = {
+  i: 0,
+  j: 0,
+};
+
 const gridState = new Map<string, CellState>(); // Key: "i,j"
 
 function updateInventoryUI(value: number | null) {
@@ -57,6 +63,8 @@ function updateInventoryUI(value: number | null) {
  * Updates a cell's state, removes its old label, and creates a new one.
  */
 function setCellState(
+  i: number,
+  j: number,
   cellKey: string,
   newValue: number | null,
   bounds: leaflet.LatLngBounds,
@@ -82,9 +90,13 @@ function setCellState(
     });
     newLabel.addTo(map);
 
+    newLabel.on("click", () => {
+      handleCellClick(i, j, cellKey, bounds);
+    });
+
     // --- VICTORY CHECK ---
     // (From your plan: check for crafting 8 or 16)
-    if (newValue >= 8) {
+    if (newValue >= 16) {
       console.log(`VICTORY! You crafted a ${newValue} token!`);
       statusPanelDiv.innerHTML = `VICTORY! You crafted a ${newValue} token!`;
     }
@@ -111,7 +123,10 @@ function handleCellClick(
 
   // --- Proximity Check (from your plan) ---
   // We'll define "nearby" as 1 cell away (distance of 1)
-  const distance = Math.max(Math.abs(i), Math.abs(j));
+  const distance = Math.max(
+    Math.abs(i - playerState.i),
+    Math.abs(j - playerState.j),
+  );
   if (distance > 1) {
     statusPanelDiv.innerHTML = "That cell is too far away!";
     return; // Too far, do nothing
@@ -125,7 +140,7 @@ function handleCellClick(
     if (cell.value !== null) {
       statusPanelDiv.innerHTML = `Picked up ${cell.value}.`;
       updateInventoryUI(cell.value);
-      setCellState(cellKey, null, bounds);
+      setCellState(i, j, cellKey, null, bounds);
     }
     // 1b: Cell is empty. Do nothing.
 
@@ -136,12 +151,12 @@ function handleCellClick(
       const newValue = playerInventory * 2;
       statusPanelDiv.innerHTML =
         `Combined ${playerInventory} + ${cell.value} = ${newValue}!`;
-      setCellState(cellKey, newValue, bounds);
+      setCellState(i, j, cellKey, newValue, bounds);
       updateInventoryUI(null); // Empty inventory
     } // 2b: Cell is EMPTY. Place token.
     else if (cell.value === null) {
       statusPanelDiv.innerHTML = `Placed ${playerInventory}.`;
-      setCellState(cellKey, playerInventory, bounds);
+      setCellState(i, j, cellKey, playerInventory, bounds);
       updateInventoryUI(null); // Empty inventory
     } // 2c: Cell has different token. Do nothing.
     else {
@@ -201,7 +216,7 @@ for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
     rect.addTo(map);
 
     // --- Center player marker in [0, 0] cell ---
-    if (i === 0 && j === 0) {
+    if (i === playerState.i && j === playerState.j) {
       const playerMarker = leaflet.marker(bounds.getCenter());
       playerMarker.bindTooltip("That's you!");
       playerMarker.addTo(map);
