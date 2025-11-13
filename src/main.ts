@@ -18,6 +18,7 @@ const CLASSROOM_LATLNG = leaflet.latLng(
 
 // Tunable gameplay parameters
 const GAMEPLAY_ZOOM_LEVEL = 19;
+const TILE_DEGREES = 1e-4;
 
 // Create the map div
 const mapDiv = document.createElement("div");
@@ -46,5 +47,20 @@ leaflet
 const playerMarker = leaflet.marker(CLASSROOM_LATLNG);
 playerMarker.bindTooltip("That's you!");
 playerMarker.addTo(map);
+
+// --- Draw one test cell [0, 0] ---
+const origin = CLASSROOM_LATLNG;
+
+// Calculate the bounds for the cell [0, 0]
+const bounds = leaflet.latLngBounds([
+  // Southwest corner
+  [origin.lat, origin.lng],
+  // Northeast corner
+  [origin.lat + TILE_DEGREES, origin.lng + TILE_DEGREES],
+]);
+
+// Create the rectangle and add it to the map
+const rect = leaflet.rectangle(bounds);
+rect.addTo(map);
 
 console.log("Map initialized!");
