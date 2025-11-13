@@ -55,4 +55,4 @@ Key gameplay challenge: Allow the player to explore and find new tokens.
       - Re-running the grid-drawing loops, but using the _new_ player `i, j` as the origin.
       - (This will make new, unexplored cells appear at the edges).
 - [x] Update the `handleCellClick` proximity check to use the new player `i, j` state instead of just `[0, 0]`.
-- [ ] Update the map's "view" (camera) to follow the player marker.
+- [x] Update the map's "view" (camera) to follow the player marker.

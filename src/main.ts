@@ -214,9 +214,12 @@ function drawGrid() {
 
       // --- Center player marker ---
       if (i === 0 && j === 0) { // Note: this is (0,0) *relative* to player
+        const playerCenter = bounds.getCenter();
         const playerMarker = leaflet.marker(bounds.getCenter());
         playerMarker.bindTooltip("That's you!");
-        playerMarker.addTo(gridLayerGroup); // <-- ADD TO GROUP, NOT MAP
+        playerMarker.addTo(gridLayerGroup);
+
+        map.setView(playerCenter, GAMEPLAY_ZOOM_LEVEL);
       }
 
       // 1. CHECK FOR (OR CREATE) STATE
