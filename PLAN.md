@@ -83,7 +83,7 @@ Key gameplay challenge: Ensure the grid and camera move in lock-step with the pl
 
 #### Steps d
 
-- [ ] In `src/main.ts`, update the `leaflet.map()` options to disable all map movement:
+- [x] In `src/main.ts`, update the `leaflet.map()` options to disable all map movement:
   - Add `dragging: false`.
   - Add `touchZoom: false`.
   - Add `doubleClickZoom: false`.

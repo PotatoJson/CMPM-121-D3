@@ -275,6 +275,9 @@ const map = leaflet.map(mapDiv, {
   maxZoom: GAMEPLAY_ZOOM_LEVEL,
   zoomControl: false,
   scrollWheelZoom: false,
+  dragging: false,
+  touchZoom: false,
+  doubleClickZoom: false,
 });
 
 const playerMarker = leaflet.marker(
