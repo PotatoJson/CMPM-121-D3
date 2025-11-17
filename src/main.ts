@@ -150,11 +150,7 @@ function handleCellClick(
       playerState.i = i;
       playerState.j = j;
 
-      const newLat = GRID_ORIGIN.lat + (i + 0.5) * TILE_DEGREES;
-      const newLng = GRID_ORIGIN.lng + (j + 0.5) * TILE_DEGREES;
-      // playerMarker.setLatLng([newLat, newLng]);
-
-      map.setView([newLat, newLng]);
+      drawGrid();
     }
 
     // Inventory is FULL
