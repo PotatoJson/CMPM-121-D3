@@ -34,6 +34,9 @@ const CLASSROOM_LATLNG = leaflet.latLng(
   -122.05703507501151,
 );
 
+// Grid origin (Null Island)
+const GRID_ORIGIN = leaflet.latLng(0, 0);
+
 // Tunable gameplay parameters
 const GAMEPLAY_ZOOM_LEVEL = 19;
 const TILE_DEGREES = 1e-4;
@@ -44,8 +47,8 @@ const TOKEN_SPAWN_PROBABILITY = 0.2;
 let playerInventory: number | null = null;
 
 const playerState = {
-  i: 0,
-  j: 0,
+  i: Math.floor(CLASSROOM_LATLNG.lat / TILE_DEGREES),
+  j: Math.floor(CLASSROOM_LATLNG.lng / TILE_DEGREES),
 };
 
 const gridState = new Map<string, CellState>(); // Key: "i,j"
@@ -135,44 +138,40 @@ function handleCellClick(
 
   // --- Core Game Logic ---
 
-  // Case 1: Inventory is EMPTY
-  // Case 1: Inventory is EMPTY
   if (playerInventory === null) {
-    // 1a: Cell has a token. Pick it up.
+    // Cell has a token. Pick it up.
     if (cell.value !== null) {
       statusPanelDiv.innerHTML = `Picked up ${cell.value}.`;
       updateInventoryUI(cell.value);
       setCellState(i, j, cellKey, null, bounds);
-    } // 1b: Cell is EMPTY. This is a MOVEMENT click.
+    } // Cell is EMPTY. This is a MOVEMENT click.
     else {
       statusPanelDiv.innerHTML = `Moved to [${i}, ${j}].`;
       playerState.i = i;
       playerState.j = j;
 
-      // --- Instead of redrawing the grid, just move the player marker ---
-      const newLat = CLASSROOM_LATLNG.lat + (i + 0.5) * TILE_DEGREES;
-      const newLng = CLASSROOM_LATLNG.lng + (j + 0.5) * TILE_DEGREES;
+      const newLat = GRID_ORIGIN.lat + (i + 0.5) * TILE_DEGREES;
+      const newLng = GRID_ORIGIN.lng + (j + 0.5) * TILE_DEGREES;
       playerMarker.setLatLng([newLat, newLng]);
 
-      // --- (Optional) Center camera on player after move ---
       map.setView([newLat, newLng]);
     }
 
-    // Case 2: Inventory is FULL
+    // Inventory is FULL
   } else {
-    // 2a: Cell has matching token. Combine!
+    // Cell has matching token. Combine!
     if (cell.value === playerInventory) {
       const newValue = playerInventory * 2;
       statusPanelDiv.innerHTML =
         `Combined ${playerInventory} + ${cell.value} = ${newValue}!`;
       setCellState(i, j, cellKey, newValue, bounds);
       updateInventoryUI(null); // Empty inventory
-    } // 2b: Cell is EMPTY. Place token.
+    } // Cell is EMPTY. Place token.
     else if (cell.value === null) {
       statusPanelDiv.innerHTML = `Placed ${playerInventory}.`;
       setCellState(i, j, cellKey, playerInventory, bounds);
       updateInventoryUI(null); // Empty inventory
-    } // 2c: Cell has different token. Do nothing.
+    } // Cell has different token. Do nothing.
     else {
       statusPanelDiv.innerHTML = "Can't combine different tokens!";
     }
@@ -183,18 +182,14 @@ function drawGrid() {
   // Clear all old layers (rects, labels, markers)
   gridLayerGroup.clearLayers();
 
-  // --- This makes the grid "memoryless" ---
-  // It forgets all state every time the map moves.
-  gridState.clear();
-  // ----------------------------------------
+  // gridState.clear();
 
-  const origin = CLASSROOM_LATLNG;
+  const origin = GRID_ORIGIN;
 
   // --- Get grid origin from camera center ---
   const centerLatLng = map.getCenter();
   const center_i = Math.floor((centerLatLng.lat - origin.lat) / TILE_DEGREES);
   const center_j = Math.floor((centerLatLng.lng - origin.lng) / TILE_DEGREES);
-  // ----------------------------------------
 
   for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
     for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
@@ -225,10 +220,7 @@ function drawGrid() {
       });
       rect.addTo(gridLayerGroup);
 
-      // --- Player marker is now separate, so that 'if' block is gone ---
-
-      // 1. CHECK FOR (OR CREATE) STATE
-      // Because we call gridState.clear(), this logic runs EVERY time.
+      // CHECK FOR (OR CREATE) STATE
       if (!gridState.has(cellKey)) {
         let value: number | null = null;
         if (luck([cell_i, cell_j].toString()) < TOKEN_SPAWN_PROBABILITY) {
@@ -239,11 +231,9 @@ function drawGrid() {
         gridState.set(cellKey, { value, label: null });
       }
 
-      // 2. GET THE GUARANTEED STATE
       const cellState = gridState.get(cellKey)!;
       const value = cellState.value;
 
-      // 3. DRAW THE LABEL (if value exists)
       if (value !== null) {
         const labelIcon = leaflet.divIcon({
           className: "token-label",
@@ -262,7 +252,6 @@ function drawGrid() {
         cellState.label = label;
       }
 
-      // 5. ADD CLICK HANDLER TO THE RECTANGLE
       rect.on("click", () => {
         handleCellClick(cell_i, cell_j, cellKey, bounds);
       });
@@ -290,8 +279,8 @@ const map = leaflet.map(mapDiv, {
 
 const playerMarker = leaflet.marker(
   [
-    CLASSROOM_LATLNG.lat + 0.5 * TILE_DEGREES,
-    CLASSROOM_LATLNG.lng + 0.5 * TILE_DEGREES,
+    GRID_ORIGIN.lat + (playerState.i + 0.5) * TILE_DEGREES,
+    GRID_ORIGIN.lng + (playerState.j + 0.5) * TILE_DEGREES,
   ],
 );
 playerMarker.bindTooltip("That's you!");
