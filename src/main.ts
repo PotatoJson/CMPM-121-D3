@@ -301,8 +301,5 @@ leaflet
 // --- Setup Grid Layer and Events ---
 gridLayerGroup.addTo(map); // Add the group to the map ONCE
 
-// --- This ties the grid drawing to the camera ---
-map.on("moveend", drawGrid);
-// ----------------------------------------
 
 drawGrid(); // Draw the grid for the first time
