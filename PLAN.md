@@ -89,7 +89,7 @@ Key gameplay challenge: Ensure the grid and camera move in lock-step with the pl
   - Add `doubleClickZoom: false`.
   - (Ensure `scrollWheelZoom: false` is still `false`).
 - [x] At the bottom of `src/main.ts`, remove the map event listener: `map.on("moveend", drawGrid);`.
-- [ ] In `src/main.ts`, **remove** the standalone `playerMarker` creation (the 7 lines of code that are right after the `leaflet.map()` block). We will add the marker back _inside_ the `drawGrid` function.
+- [x] In `src/main.ts`, **remove** the standalone `playerMarker` creation (the 7 lines of code that are right after the `leaflet.map()` block). We will add the marker back _inside_ the `drawGrid` function.
 - [ ] In `handleCellClick()`, find the "MOVEMENT" `else` block (where the player moves to an empty cell).
   - Keep the lines that update `playerState.i` and `playerState.j`.
   - **Remove** the lines that calculate `newLat`, `newLng`, and call `playerMarker.setLatLng()` and `map.setView()`.

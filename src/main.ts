@@ -152,7 +152,7 @@ function handleCellClick(
 
       const newLat = GRID_ORIGIN.lat + (i + 0.5) * TILE_DEGREES;
       const newLng = GRID_ORIGIN.lng + (j + 0.5) * TILE_DEGREES;
-      playerMarker.setLatLng([newLat, newLng]);
+      // playerMarker.setLatLng([newLat, newLng]);
 
       map.setView([newLat, newLng]);
     }
@@ -280,14 +280,14 @@ const map = leaflet.map(mapDiv, {
   doubleClickZoom: false,
 });
 
-const playerMarker = leaflet.marker(
-  [
-    GRID_ORIGIN.lat + (playerState.i + 0.5) * TILE_DEGREES,
-    GRID_ORIGIN.lng + (playerState.j + 0.5) * TILE_DEGREES,
-  ],
-);
-playerMarker.bindTooltip("That's you!");
-playerMarker.addTo(map);
+// const playerMarker = leaflet.marker(
+//   [
+//     GRID_ORIGIN.lat + (playerState.i + 0.5) * TILE_DEGREES,
+//     GRID_ORIGIN.lng + (playerState.j + 0.5) * TILE_DEGREES,
+//   ],
+// );
+// playerMarker.bindTooltip("That's you!");
+// playerMarker.addTo(map);
 
 // Populate the map with a background tile layer
 leaflet
@@ -300,6 +300,5 @@ leaflet
 
 // --- Setup Grid Layer and Events ---
 gridLayerGroup.addTo(map); // Add the group to the map ONCE
-
 
 drawGrid(); // Draw the grid for the first time
