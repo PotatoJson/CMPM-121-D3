@@ -74,3 +74,29 @@ Key gameplay challenge: Ensure the player starts at the classroom location, even
 - [x] Update the initial `map` center in `leaflet.map()` to use `CLASSROOM_LATLNG`, so the camera starts on the player.
 - [x] Update the `playerMarker` creation to use the _classroom's coordinates_, not the grid origin's.
 - [x] In `drawGrid()`, remove the `gridState.clear()` line. This will re-enable persistent memory, and the `!gridState.has(cellKey)` check will now correctly "discover" and save cell states permanently.
+
+### D3.d: Player-Centric Refactor
+
+Key technical challenge: Decouple the grid from the map's camera and tie it directly to the player's state. This will simplify the game logic, make the player the true "center" of the world, and disable free-scrolling the map.
+
+Key gameplay challenge: Ensure the grid and camera move in lock-step with the player when they move to a new cell.
+
+#### Steps d
+
+- [ ] In `src/main.ts`, update the `leaflet.map()` options to disable all map movement:
+  - Add `dragging: false`.
+  - Add `touchZoom: false`.
+  - Add `doubleClickZoom: false`.
+  - (Ensure `scrollWheelZoom: false` is still `false`).
+- [ ] At the bottom of `src/main.ts`, remove the map event listener: `map.on("moveend", drawGrid);`.
+- [ ] In `src/main.ts`, **remove** the standalone `playerMarker` creation (the 7 lines of code that are right after the `leaflet.map()` block). We will add the marker back _inside_ the `drawGrid` function.
+- [ ] In `handleCellClick()`, find the "MOVEMENT" `else` block (where the player moves to an empty cell).
+  - Keep the lines that update `playerState.i` and `playerState.j`.
+  - **Remove** the lines that calculate `newLat`, `newLng`, and call `playerMarker.setLatLng()` and `map.setView()`.
+  - **Add** a single call to `drawGrid();` at the end of the `else` block.
+- [ ] In `drawGrid()`, refactor the centering logic:
+  - **Remove** the 3 lines that calculate `centerLatLng`, `center_i`, and `center_j` from `map.getCenter()`.
+  - In the `for` loops, change the `cell_i` and `cell_j` calculations to be relative to the player's state:
+    - `const cell_i = playerState.i + i;`
+    - `const cell_j = playerState.j + j;`
+- [ ] In `drawGrid()`, inside the `j` loop (e.g., right after `rect.addTo(gridLayerGroup);`), add back the player marker and camera-centering logic
