@@ -182,16 +182,11 @@ function drawGrid() {
 
   const origin = GRID_ORIGIN;
 
-  // --- Get grid origin from camera center ---
-  const centerLatLng = map.getCenter();
-  const center_i = Math.floor((centerLatLng.lat - origin.lat) / TILE_DEGREES);
-  const center_j = Math.floor((centerLatLng.lng - origin.lng) / TILE_DEGREES);
-
   for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
     for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
       // --- Calculate *actual* grid coordinates ---
-      const cell_i = center_i + i;
-      const cell_j = center_j + j;
+      const cell_i = playerState.i + i;
+      const cell_j = playerState.j + j;
       const cellKey = `${cell_i},${cell_j}`; // Unique key for our Map
 
       // Calculate the bounds for cell [cell_i, cell_j]

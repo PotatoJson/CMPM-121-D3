@@ -94,7 +94,7 @@ Key gameplay challenge: Ensure the grid and camera move in lock-step with the pl
   - Keep the lines that update `playerState.i` and `playerState.j`.
   - **Remove** the lines that calculate `newLat`, `newLng`, and call `playerMarker.setLatLng()` and `map.setView()`.
   - **Add** a single call to `drawGrid();` at the end of the `else` block.
-- [ ] In `drawGrid()`, refactor the centering logic:
+- [x] In `drawGrid()`, refactor the centering logic:
   - **Remove** the 3 lines that calculate `centerLatLng`, `center_i`, and `center_j` from `map.getCenter()`.
   - In the `for` loops, change the `cell_i` and `cell_j` calculations to be relative to the player's state:
     - `const cell_i = playerState.i + i;`
