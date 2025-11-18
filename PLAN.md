@@ -99,4 +99,4 @@ Key gameplay challenge: Ensure the grid and camera move in lock-step with the pl
   - In the `for` loops, change the `cell_i` and `cell_j` calculations to be relative to the player's state:
     - `const cell_i = playerState.i + i;`
     - `const cell_j = playerState.j + j;`
-- [ ] In `drawGrid()`, inside the `j` loop (e.g., right after `rect.addTo(gridLayerGroup);`), add back the player marker and camera-centering logic
+- [x] In `drawGrid()`, inside the `j` loop (e.g., right after `rect.addTo(gridLayerGroup);`), add back the player marker and camera-centering logic

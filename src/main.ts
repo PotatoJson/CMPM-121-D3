@@ -211,6 +211,16 @@ function drawGrid() {
       });
       rect.addTo(gridLayerGroup);
 
+      if (i === 0 && j === 0) { // This is the player's cell
+        const playerCenter = bounds.getCenter();
+        const playerMarker = leaflet.marker(playerCenter);
+        playerMarker.bindTooltip("That's you!");
+        playerMarker.addTo(gridLayerGroup);
+
+        // Center the map view on the player
+        map.setView(playerCenter, GAMEPLAY_ZOOM_LEVEL);
+      }
+
       // CHECK FOR (OR CREATE) STATE
       if (!gridState.has(cellKey)) {
         let value: number | null = null;
