@@ -63,9 +63,66 @@ function updateInventoryUI(value: number | null) {
   }
 }
 
-/**
- * Updates a cell's state, removes its old label, and creates a new one.
- */
+// --- Movement Facade & Geolocation ---
+
+const playerMoveEvent = new EventTarget();
+
+function movePlayerTo(i: number, j: number) {
+  const event = new CustomEvent("player-move", { detail: { i, j } });
+  playerMoveEvent.dispatchEvent(event);
+}
+
+// The "Game Loop" listener for movement
+playerMoveEvent.addEventListener("player-move", (event: Event) => {
+  const { i, j } = (event as CustomEvent).detail;
+
+  // 1. Update Player State
+  playerState.i = i;
+  playerState.j = j;
+
+  // 2. Provide UI Feedback
+  statusPanelDiv.innerHTML = `Moved to [${i}, ${j}].`;
+
+  // 3. Redraw & Save
+  drawGrid();
+  saveGameState();
+});
+
+class _GeolocationMovement {
+  watchId: number | null = null;
+
+  start() {
+    if (this.watchId !== null) return;
+
+    console.log("📍 Starting Geolocation tracking...");
+    this.watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Convert Real-World Lat/Lng to Grid I/J
+        const i = Math.floor((lat - GRID_ORIGIN.lat) / TILE_DEGREES);
+        const j = Math.floor((lng - GRID_ORIGIN.lng) / TILE_DEGREES);
+
+        // Only move if we actually changed cells
+        if (i !== playerState.i || j !== playerState.j) {
+          movePlayerTo(i, j);
+        }
+      },
+      (error) => console.error("❌ Geolocation error:", error),
+      { enableHighAccuracy: true },
+    );
+  }
+
+  stop() {
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+      console.log("🛑 Stopped Geolocation tracking.");
+    }
+  }
+}
+
 function setCellState(
   i: number,
   j: number,
@@ -110,10 +167,6 @@ function setCellState(
   gridState.set(cellKey, { value: newValue, label: newLabel });
 }
 
-/**
- * This function is called when any grid cell is clicked.
- * It contains the core game logic.
- */
 function handleCellClick(
   i: number,
   j: number,
@@ -125,8 +178,6 @@ function handleCellClick(
 
   console.log(`Clicked [${cellKey}]. State value is:`, cell.value);
 
-  // --- Proximity Check (from your plan) ---
-  // We'll define "nearby" as 1 cell away (distance of 1)
   const distance = Math.max(
     Math.abs(i - playerState.i),
     Math.abs(j - playerState.j),
@@ -146,16 +197,12 @@ function handleCellClick(
       setCellState(i, j, cellKey, null, bounds);
     } // Cell is EMPTY. This is a MOVEMENT click.
     else {
-      statusPanelDiv.innerHTML = `Moved to [${i}, ${j}].`;
-      playerState.i = i;
-      playerState.j = j;
-
-      drawGrid();
+      // We now delegate movement to the system!
+      movePlayerTo(i, j);
     }
 
     // Inventory is FULL
   } else {
-    // Cell has matching token. Combine!
     if (cell.value === playerInventory) {
       const newValue = playerInventory * 2;
       statusPanelDiv.innerHTML =

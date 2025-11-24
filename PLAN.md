@@ -87,10 +87,10 @@ Key gameplay challenge: Allow players to play by walking in the real world (Geol
   - [x] On game startup, check `localStorage`. If data exists, load it; otherwise, start fresh.
   - [x] Add a "Reset Game" button to the UI that clears `localStorage` and reloads the page.
 
-- [ ] **Facade Pattern (Movement)**:
-  - [ ] Create a `globalMoveEvent` target (or simple event dispatcher) that the game logic listens to for "player-moved" events.
-  - [ ] Refactor the current "click-to-move" logic into a class/function (e.g., `ManualMovement`) that dispatches these events instead of modifying state directly.
-  - [ ] Create a new class/function `GeolocationMovement` that uses `navigator.geolocation.watchPosition` to dispatch movement events based on real-world lat/lng updates.
+- [x] **Facade Pattern (Movement)**:
+  - [x] Create a `globalMoveEvent` target (or simple event dispatcher) that the game logic listens to for "player-moved" events.
+  - [x] Refactor the current "click-to-move" logic into a class/function (e.g., `ManualMovement`) that dispatches these events instead of modifying state directly.
+  - [x] Create a new class/function `GeolocationMovement` that uses `navigator.geolocation.watchPosition` to dispatch movement events based on real-world lat/lng updates.
 
 - [ ] **Mode Switching**:
   - [ ] Add logic to check a URL query parameter (e.g., `?movement=geo`).
