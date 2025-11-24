@@ -23,8 +23,12 @@ document.body.append(inventoryDiv);
 
 const statusPanelDiv = document.createElement("div");
 statusPanelDiv.id = "statusPanel";
-statusPanelDiv.innerHTML = "Welcome! Find and combine tokens.";
 document.body.append(statusPanelDiv);
+
+// Create a dedicated element for text messages
+const statusText = document.createElement("div");
+statusText.innerHTML = "Welcome! Find and combine tokens.";
+statusPanelDiv.append(statusText);
 
 // --- Map Setup ---
 
@@ -45,6 +49,7 @@ const TOKEN_SPAWN_PROBABILITY = 0.2;
 
 // --- Game State ---
 let playerInventory: number | null = null;
+let isManualMovementEnabled = true;
 
 const playerState = {
   i: Math.floor(CLASSROOM_LATLNG.lat / TILE_DEGREES),
@@ -81,14 +86,14 @@ playerMoveEvent.addEventListener("player-move", (event: Event) => {
   playerState.j = j;
 
   // 2. Provide UI Feedback
-  statusPanelDiv.innerHTML = `Moved to [${i}, ${j}].`;
+  statusText.innerHTML = `Moved to [${i}, ${j}].`;
 
   // 3. Redraw & Save
   drawGrid();
   saveGameState();
 });
 
-class _GeolocationMovement {
+class GeolocationMovement {
   watchId: number | null = null;
 
   start() {
@@ -159,7 +164,7 @@ function setCellState(
     // (From your plan: check for crafting 8 or 16)
     if (newValue >= 16) {
       console.log(`VICTORY! You crafted a ${newValue} token!`);
-      statusPanelDiv.innerHTML = `VICTORY! You crafted a ${newValue} token!`;
+      statusText.innerHTML = `VICTORY! You crafted a ${newValue} token!`;
     }
   }
 
@@ -183,7 +188,7 @@ function handleCellClick(
     Math.abs(j - playerState.j),
   );
   if (distance > 1) {
-    statusPanelDiv.innerHTML = "That cell is too far away!";
+    statusText.innerHTML = "That cell is too far away!";
     return; // Too far, do nothing
   }
 
@@ -192,31 +197,35 @@ function handleCellClick(
   if (playerInventory === null) {
     // Cell has a token. Pick it up.
     if (cell.value !== null) {
-      statusPanelDiv.innerHTML = `Picked up ${cell.value}.`;
+      statusText.innerHTML = `Picked up ${cell.value}.`;
       updateInventoryUI(cell.value);
       setCellState(i, j, cellKey, null, bounds);
     } // Cell is EMPTY. This is a MOVEMENT click.
     else {
-      // We now delegate movement to the system!
-      movePlayerTo(i, j);
+      // Only allow manual movement if enabled!
+      if (isManualMovementEnabled) {
+        movePlayerTo(i, j);
+      } else {
+        statusText.innerHTML = "Movement is controlled by GPS.";
+      }
     }
 
     // Inventory is FULL
   } else {
     if (cell.value === playerInventory) {
       const newValue = playerInventory * 2;
-      statusPanelDiv.innerHTML =
+      statusText.innerHTML =
         `Combined ${playerInventory} + ${cell.value} = ${newValue}!`;
       setCellState(i, j, cellKey, newValue, bounds);
       updateInventoryUI(null); // Empty inventory
     } // Cell is EMPTY. Place token.
     else if (cell.value === null) {
-      statusPanelDiv.innerHTML = `Placed ${playerInventory}.`;
+      statusText.innerHTML = `Placed ${playerInventory}.`;
       setCellState(i, j, cellKey, playerInventory, bounds);
       updateInventoryUI(null); // Empty inventory
     } // Cell has different token. Do nothing.
     else {
-      statusPanelDiv.innerHTML = "Can't combine different tokens!";
+      statusText.innerHTML = "Can't combine different tokens!";
     }
   }
   saveGameState();
@@ -376,16 +385,6 @@ const map = leaflet.map(mapDiv, {
   doubleClickZoom: false,
 });
 
-// const playerMarker = leaflet.marker(
-//   [
-//     GRID_ORIGIN.lat + (playerState.i + 0.5) * TILE_DEGREES,
-//     GRID_ORIGIN.lng + (playerState.j + 0.5) * TILE_DEGREES,
-//   ],
-// );
-// playerMarker.bindTooltip("That's you!");
-// playerMarker.addTo(map);
-
-// Populate the map with a background tile layer
 leaflet
   .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -395,8 +394,24 @@ leaflet
   .addTo(map);
 
 // --- Setup Grid Layer and Events ---
-gridLayerGroup.addTo(map); // Add the group to the map ONCE
+gridLayerGroup.addTo(map);
 
+// 1. Load Saved State (if any)
 loadGameState();
 
-drawGrid(); // Draw the grid for the first time
+// 2. Determine Movement Mode
+const urlParams = new URLSearchParams(globalThis.location.search);
+if (urlParams.get("movement") === "geo") {
+  console.log("🌍 Geolocation Mode Active");
+  isManualMovementEnabled = false;
+
+  // Start the GPS watcher
+  const movementSystem = new GeolocationMovement();
+  movementSystem.start();
+} else {
+  console.log("🖱️ Manual Mode Active (Click to move)");
+  isManualMovementEnabled = true;
+}
+
+// 3. Initial Draw
+drawGrid();

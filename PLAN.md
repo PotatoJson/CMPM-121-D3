@@ -92,7 +92,7 @@ Key gameplay challenge: Allow players to play by walking in the real world (Geol
   - [x] Refactor the current "click-to-move" logic into a class/function (e.g., `ManualMovement`) that dispatches these events instead of modifying state directly.
   - [x] Create a new class/function `GeolocationMovement` that uses `navigator.geolocation.watchPosition` to dispatch movement events based on real-world lat/lng updates.
 
-- [ ] **Mode Switching**:
-  - [ ] Add logic to check a URL query parameter (e.g., `?movement=geo`).
-  - [ ] IF `geo` is requested: Activate `GeolocationMovement`.
-  - [ ] ELSE: Activate `ManualMovement` (and maybe add explicit N/S/E/W buttons if clicking cells is too vague).
+- [x] **Mode Switching**:
+  - [x] Add logic to check a URL query parameter (e.g., `?movement=geo`).
+  - [x] IF `geo` is requested: Activate `GeolocationMovement`.
+  - [x] ELSE: Activate `ManualMovement` (and maybe add explicit N/S/E/W buttons if clicking cells is too vague).
