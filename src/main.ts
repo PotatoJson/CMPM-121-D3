@@ -172,7 +172,55 @@ function handleCellClick(
       statusPanelDiv.innerHTML = "Can't combine different tokens!";
     }
   }
+  saveGameState();
 }
+
+// --- Persistence ---
+
+function saveGameState() {
+  const gameState = {
+    playerInventory,
+    playerState,
+    gridState: Array.from(gridState.entries()).map(([key, cell]) => [
+      key,
+      cell.value,
+    ]),
+  };
+  localStorage.setItem("cmpm121-d3-state", JSON.stringify(gameState));
+}
+
+function loadGameState() {
+  const saved = localStorage.getItem("cmpm121-d3-state");
+  if (saved) {
+    const gameState = JSON.parse(saved);
+
+    // Restore inventory
+    playerInventory = gameState.playerInventory;
+    updateInventoryUI(playerInventory);
+
+    // Restore player state
+    playerState.i = gameState.playerState.i;
+    playerState.j = gameState.playerState.j;
+
+    // Restore grid state (only values, labels will be recreated by drawGrid)
+    gridState.clear();
+    gameState.gridState.forEach(([key, value]: [string, number | null]) => {
+      gridState.set(key, { value, label: null });
+    });
+  }
+}
+
+// --- Reset Button ---
+const resetButton = document.createElement("button");
+resetButton.innerHTML = "🚮 Reset Game";
+resetButton.style.marginTop = "10px";
+resetButton.onclick = () => {
+  if (confirm("Are you sure you want to wipe your save?")) {
+    localStorage.removeItem("cmpm121-d3-state");
+    location.reload();
+  }
+};
+statusPanelDiv.append(document.createElement("br"), resetButton);
 
 function drawGrid() {
   // Clear all old layers (rects, labels, markers)
@@ -301,5 +349,7 @@ leaflet
 
 // --- Setup Grid Layer and Events ---
 gridLayerGroup.addTo(map); // Add the group to the map ONCE
+
+loadGameState();
 
 drawGrid(); // Draw the grid for the first time
